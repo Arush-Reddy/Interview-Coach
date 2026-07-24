@@ -3,6 +3,20 @@ import re
 from utils.gemini_client import generate_text
 
 
+def parse_interview_questions(response_text):
+    """Parse and validate Gemini's numbered interview-question list."""
+    questions = [
+        question.strip()
+        for question in re.split(r"(?m)^\s*\d+[.)]\s*", response_text)
+        if question.strip()
+    ]
+
+    if len(questions) != 5:
+        raise ValueError("Gemini did not return exactly five questions. Please try again.")
+
+    return questions
+
+
 def generate_interview_questions(resume_summary):
     """Return five personalized questions as a Python list."""
     prompt = f"""
@@ -20,13 +34,4 @@ Resume summary:
 """
 
     response_text = generate_text(prompt)
-    questions = [
-        question.strip()
-        for question in re.split(r"(?m)^\s*\d+[.)]\s*", response_text)
-        if question.strip()
-    ]
-
-    if len(questions) != 5:
-        raise ValueError("Gemini did not return exactly five questions. Please try again.")
-
-    return questions
+    return parse_interview_questions(response_text)

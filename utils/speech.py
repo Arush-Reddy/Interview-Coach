@@ -1,17 +1,39 @@
 import os
+import shutil
 import tempfile
 import wave
 from functools import lru_cache
+from pathlib import Path
 
 import imageio_ffmpeg
 import whisper
 
 
 @lru_cache(maxsize=1)
+def _configure_ffmpeg():
+    """Expose imageio's versioned binary under the name Whisper invokes."""
+    source = Path(imageio_ffmpeg.get_ffmpeg_exe())
+    executable_name = "ffmpeg.exe" if os.name == "nt" else "ffmpeg"
+
+    if source.name.lower() == executable_name:
+        executable = source
+    else:
+        shim_directory = Path(tempfile.gettempdir()) / "ai-interview-coach-bin"
+        shim_directory.mkdir(parents=True, exist_ok=True)
+        executable = shim_directory / executable_name
+        if not executable.exists() or executable.stat().st_size != source.stat().st_size:
+            shutil.copy2(source, executable)
+
+    os.environ["PATH"] = (
+        f"{executable.parent}{os.pathsep}{os.environ.get('PATH', '')}"
+    )
+    return executable
+
+
+@lru_cache(maxsize=1)
 def _load_whisper_model():
     """Load Whisper once; the base model downloads the first time it is used."""
-    ffmpeg_folder = os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe())
-    os.environ["PATH"] = f"{ffmpeg_folder}{os.pathsep}{os.environ.get('PATH', '')}"
+    _configure_ffmpeg()
     return whisper.load_model("base")
 
 
