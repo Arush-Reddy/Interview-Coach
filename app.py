@@ -14,7 +14,11 @@ from utils.speech import transcribe_audio
 from utils.summarizer import summarize_resume
 
 
-st.set_page_config(page_title="AI Interview Coach", page_icon="AI", layout="wide")
+st.set_page_config(
+    page_title="AI Interview Coach",
+    page_icon=":material/record_voice_over:",
+    layout="wide",
+)
 initialize_database()
 
 
@@ -39,6 +43,7 @@ defaults = {
     "audio_durations": {},
     "answer_sources": {},
     "session_id": str(uuid.uuid4()),
+    "save_history": False,
 }
 for state_key, default_value in defaults.items():
     if state_key not in st.session_state:
@@ -48,6 +53,14 @@ for state_key, default_value in defaults.items():
 with st.sidebar:
     st.header("Interview setup")
     uploaded_file = st.file_uploader("Upload your resume", type=["pdf"])
+    st.toggle(
+        "Save score history on this device",
+        key="save_history",
+        help=(
+            "When disabled, answers remain in the current browser session and "
+            "are not added to the local SQLite history."
+        ),
+    )
 
     analyze_clicked = False
     if uploaded_file is not None:
@@ -57,7 +70,12 @@ with st.sidebar:
             new_interview_session(keep_summary=False)
 
         st.caption(uploaded_file.name)
-        analyze_clicked = st.button("Analyze resume", type="primary", use_container_width=True)
+        analyze_clicked = st.button(
+            "Analyze resume",
+            type="primary",
+            icon=":material/analytics:",
+            width="stretch",
+        )
     else:
         st.info("Upload a text-based PDF resume to begin.")
 
@@ -68,7 +86,11 @@ with st.sidebar:
             f"Answers evaluated: {len(st.session_state.evaluations)}/"
             f"{len(st.session_state.interview_questions) or 5}"
         )
-        if st.button("Start a new interview", use_container_width=True):
+        if st.button(
+            "Start a new interview",
+            icon=":material/refresh:",
+            width="stretch",
+        ):
             new_interview_session()
             st.rerun()
 
@@ -95,7 +117,11 @@ if not st.session_state.resume_summary:
     st.stop()
 
 overview_tab, practice_tab, report_tab = st.tabs(
-    ["Resume Overview", "Interview Practice", "Report & Progress"]
+    [
+        ":material/description: Resume overview",
+        ":material/record_voice_over: Interview practice",
+        ":material/monitoring: Report and progress",
+    ]
 )
 
 with overview_tab:
@@ -104,10 +130,17 @@ with overview_tab:
 
 with practice_tab:
     st.subheader("Practice Interview")
-    st.caption("Choose typed or recorded answers. Your feedback is saved automatically on this device.")
+    st.caption(
+        "Choose typed or recorded answers. Local score history is optional "
+        "and controlled from the sidebar."
+    )
 
     if not st.session_state.interview_questions:
-        if st.button("Generate 5 interview questions", type="primary"):
+        if st.button(
+            "Generate 5 interview questions",
+            type="primary",
+            icon=":material/auto_awesome:",
+        ):
             with st.spinner("Gemini is creating your questions..."):
                 try:
                     st.session_state.interview_questions = generate_interview_questions(
@@ -134,10 +167,12 @@ with practice_tab:
         st.caption(f"Question {question_index + 1} of {len(questions)}")
         st.info(question)
 
-        answer_mode = st.radio(
+        answer_mode = st.segmented_control(
             "How would you like to answer?",
             ("Type your answer", "Record your answer"),
-            horizontal=True,
+            default="Type your answer",
+            required=True,
+            width="stretch",
             key=mode_key,
         )
 
@@ -145,7 +180,11 @@ with practice_tab:
             recorded_audio = st.audio_input("Record your answer")
             if recorded_audio:
                 st.audio(recorded_audio)
-                if st.button("Transcribe recording", use_container_width=True):
+                if st.button(
+                    "Transcribe recording",
+                    icon=":material/transcribe:",
+                    width="stretch",
+                ):
                     with st.spinner("Whisper is transcribing your recording..."):
                         try:
                             transcript, duration = transcribe_audio(recorded_audio)
@@ -167,7 +206,12 @@ with practice_tab:
             key=answer_key,
         )
 
-        if st.button("Get AI Feedback", type="primary", use_container_width=True):
+        if st.button(
+            "Get AI feedback",
+            type="primary",
+            icon=":material/psychology:",
+            width="stretch",
+        ):
             if not answer.strip():
                 st.warning("Write or transcribe an answer before requesting feedback.")
             else:
@@ -188,7 +232,8 @@ with practice_tab:
                             "feedback": feedback,
                         }
                         st.session_state.evaluations[question_index] = record
-                        save_answer(record)
+                        if st.session_state.save_history:
+                            save_answer(record)
                         st.rerun()
                     except Exception as error:
                         st.error("Gemini could not evaluate the answer. Please try again.")
@@ -226,19 +271,29 @@ with practice_tab:
 
         previous_column, next_column, fresh_questions_column = st.columns(3)
         with previous_column:
-            if st.button("Previous", disabled=question_index == 0, use_container_width=True):
+            if st.button(
+                "Previous",
+                icon=":material/arrow_back:",
+                disabled=question_index == 0,
+                width="stretch",
+            ):
                 st.session_state.question_index -= 1
                 st.rerun()
         with next_column:
             if st.button(
                 "Next",
+                icon=":material/arrow_forward:",
                 disabled=question_index == len(questions) - 1,
-                use_container_width=True,
+                width="stretch",
             ):
                 st.session_state.question_index += 1
                 st.rerun()
         with fresh_questions_column:
-            if st.button("New questions", use_container_width=True):
+            if st.button(
+                "New questions",
+                icon=":material/refresh:",
+                width="stretch",
+            ):
                 new_interview_session()
                 st.rerun()
 
@@ -268,6 +323,7 @@ with report_tab:
             data=report_as_markdown(report),
             file_name="interview_report.md",
             mime="text/markdown",
+            icon=":material/download:",
         )
     else:
         total_questions = len(st.session_state.interview_questions) or 5
@@ -277,8 +333,12 @@ with report_tab:
         )
 
     st.divider()
-    st.subheader("Progress History")
-    history = get_history()
+    st.subheader("Current session history")
+    history = (
+        get_history(st.session_state.session_id)
+        if st.session_state.save_history
+        else []
+    )
 
     if history:
         history_frame = pd.DataFrame(history)
@@ -286,7 +346,15 @@ with report_tab:
         st.dataframe(
             history_frame[["created_at", "score", "communication_score", "filler_count"]],
             hide_index=True,
-            use_container_width=True,
+            width="stretch",
         )
     else:
-        st.caption("Your saved answer scores will appear here after your first evaluation.")
+        if st.session_state.save_history:
+            st.caption(
+                "Your saved answer scores will appear here after your first evaluation."
+            )
+        else:
+            st.caption(
+                "Enable local score history in the sidebar to persist this "
+                "session's score trend."
+            )

@@ -1,4 +1,5 @@
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 
@@ -13,7 +14,7 @@ def _connect():
 
 
 def initialize_database():
-    with _connect() as connection:
+    with closing(_connect()) as connection:
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS interview_answers (
@@ -30,10 +31,11 @@ def initialize_database():
             )
             """
         )
+        connection.commit()
 
 
 def save_answer(record):
-    with _connect() as connection:
+    with closing(_connect()) as connection:
         connection.execute(
             """
             INSERT OR REPLACE INTO interview_answers (
@@ -52,17 +54,21 @@ def save_answer(record):
                 record["communication"]["total_fillers"],
             ),
         )
+        connection.commit()
 
 
-def get_history():
-    with _connect() as connection:
+def get_history(session_id):
+    """Return only the current browser session's saved answer history."""
+    with closing(_connect()) as connection:
         rows = connection.execute(
             """
             SELECT created_at, session_id, question_index, score,
                    communication_score, filler_count
             FROM interview_answers
+            WHERE session_id = ?
             ORDER BY created_at
-            """
+            """,
+            (session_id,),
         ).fetchall()
 
     return [dict(row) for row in rows]
