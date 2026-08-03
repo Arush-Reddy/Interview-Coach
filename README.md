@@ -10,8 +10,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 AI Interview Coach turns a resume into a focused practice loop. It extracts a
-PDF resume, asks Gemini to build a grounded candidate summary, generates five
-personalized interview questions, evaluates typed or recorded answers, and
+PDF, DOCX, TXT, PNG, or JPG resume, asks Gemini to build a target-role briefing, generates
+five role-specific interview questions, evaluates typed or recorded answers, and
 builds a progress report with communication metrics.
 
 The project combines generative AI with deterministic analysis instead of
@@ -42,7 +42,7 @@ speaking pace, session progress, and report statistics.
 
 ```mermaid
 flowchart LR
-    A[PDF resume] --> B[pypdf text extraction]
+    A[PDF, DOCX, TXT, PNG, or JPG resume] --> B[Text extraction]
     B --> C[Gemini resume summary]
     C --> D[Personalized question generation]
     D --> E{Answer mode}
@@ -59,9 +59,12 @@ flowchart LR
 
 ## Features
 
-- Text-based PDF resume extraction with a 30,000-character prompt limit.
-- Recruiter-style resume summary grounded in supplied resume content.
-- Five personalized technical, behavioral, and growth questions.
+- PDF, DOCX, TXT, PNG, and JPG extraction with size and content validation.
+- Gemini image transcription for clear resume screenshots and scans.
+- Target-role resume briefing grounded in supplied resume content.
+- Optional pasted or uploaded job description matching.
+- Evidence-based comparison of requirements, transferable skills, and gaps.
+- Five role- and experience-specific technical, behavioral, and growth questions.
 - Typed and microphone-recorded answer modes.
 - Local Whisper transcription with bundled ffmpeg discovery.
 - Validated 1–10 answer score with strengths, improvements, and a better
@@ -119,8 +122,8 @@ Then open `http://localhost:8501`.
 ```text
 app.py                      Streamlit UI and interview state machine
 utils/gemini_client.py      Gemini model selection and API access
-utils/pdf_reader.py         Resume text extraction
-utils/summarizer.py         Grounded resume-summary prompt
+utils/pdf_reader.py         Document and resume-image text extraction
+utils/summarizer.py         Grounded target-role briefing prompt
 utils/question_generator.py Question generation and strict parsing
 utils/evaluator.py          Structured answer evaluation
 utils/speech.py             Whisper loading and ffmpeg configuration
@@ -186,7 +189,7 @@ ffmpeg installed.
 - The simple filler-word heuristic does not measure overall communication
   quality, confidence, accent, or interview readiness.
 - Speaking rate is only available for recorded answers.
-- PDF extraction works best on text-based files, not scanned-image resumes.
+- PDF extraction works best on text-based files; scanned resumes require OCR.
 - The Whisper base model trades accuracy for local resource usage.
 - Local SQLite persistence is not suitable for a public multi-user system.
 - No claim is made that app scores predict real hiring outcomes.
