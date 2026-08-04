@@ -130,15 +130,7 @@ def render_setup_fields(compact=False):
             "Edit interview setup",
             icon=":material/tune:",
             width="stretch",
-            disabled=(
-                not st.session_state.target_role.strip()
-                or not has_api_key()
-            ),
         )
-        if not st.session_state.target_role.strip():
-            st.caption("Enter a target role to continue.")
-        elif not has_api_key():
-            st.caption("Gemini is not configured on this server.")
     else:
         setup_surface = st.container(border=True)
 
