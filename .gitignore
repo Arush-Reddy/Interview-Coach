@@ -5,6 +5,7 @@ __pycache__/
 .env
 .streamlit/secrets.toml
 data/*.db
+data/*.log
 resumes/*.pdf
 .pytest_cache/
 .coverage
