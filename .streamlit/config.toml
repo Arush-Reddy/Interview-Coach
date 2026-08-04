@@ -27,5 +27,8 @@ headingFontWeights = [700, 700, 600, 600, 600, 600]
 [browser]
 gatherUsageStats = false
 
+[client]
+showSidebarNavigation = false
+
 [server]
 headless = true
