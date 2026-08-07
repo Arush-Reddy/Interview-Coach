@@ -184,6 +184,7 @@ class ReportTests(unittest.TestCase):
                 1: _record("session-a", 1, 5),
             }
         )
+        assert report is not None
 
         self.assertEqual(report["answers_evaluated"], 2)
         self.assertEqual(report["average_score"], 7.0)

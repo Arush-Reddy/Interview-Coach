@@ -19,6 +19,9 @@ class StreamlitSmokeTests(unittest.TestCase):
             )
         )
         self.assertGreaterEqual(len(app.file_uploader), 1)
+        self.assertTrue(
+            any(toggle.label == "Accessibility" for toggle in app.toggle)
+        )
 
 
 if __name__ == "__main__":

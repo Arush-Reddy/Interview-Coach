@@ -9,10 +9,16 @@
 [![CI](https://github.com/Arush-Reddy/Interview-Coach/actions/workflows/ci.yml/badge.svg)](https://github.com/Arush-Reddy/Interview-Coach/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+[**Try the live app**](https://interview-coach-arush.streamlit.app/) ·
+[Architecture](docs/architecture.md) ·
+[Testing](docs/testing.md) ·
+[Development log](docs/development-log.md) ·
+[Demo guide](docs/demo-guide.md)
+
 AI Interview Coach turns a resume into a focused practice loop. It extracts a
-PDF, DOCX, TXT, PNG, or JPG resume, asks Gemini to build a target-role briefing, generates
-five role-specific interview questions, evaluates typed or recorded answers, and
-builds a progress report with communication metrics.
+PDF, DOCX, TXT, PNG, or JPG résumé, asks Gemini to build a target-role briefing,
+generates five role-specific interview questions, evaluates typed or recorded
+answers, and builds a progress report with communication metrics.
 
 The project combines generative AI with deterministic analysis instead of
 treating an LLM response as the entire product. Gemini handles resume-aware
@@ -34,7 +40,10 @@ speaking pace, session progress, and report statistics.
   speaking rate remain transparent and testable.
 - **Stateful product design:** Streamlit session state supports a
   one-question-at-a-time interview flow without losing progress on reruns.
-- **Privacy-aware defaults:** uploaded PDFs are processed in memory, score
+- **Accessible presentation:** a persistent accessibility mode enlarges text
+  and controls, strengthens contrast, reduces motion, and improves focus
+  visibility.
+- **Privacy-aware defaults:** uploaded documents are processed in memory, score
   persistence is opt-in, and displayed history is scoped to the current
   interview session.
 
@@ -57,6 +66,9 @@ flowchart LR
     J --> L[Downloadable interview report]
 ```
 
+See [the architecture document](docs/architecture.md) for component
+responsibilities, data boundaries, and the full request lifecycle.
+
 ## Features
 
 - PDF, DOCX, TXT, PNG, and JPG extraction with size and content validation.
@@ -73,22 +85,37 @@ flowchart LR
 - One-question-at-a-time navigation and progress tracking.
 - Downloadable Markdown interview report.
 - Optional session-scoped SQLite score history.
-- Dark Streamlit theme, Docker support, and automated GitHub tests.
+- Persistent accessibility mode and keyboard-visible focus states.
+- Responsive dark Streamlit interface with dedicated Practice, How it works,
+  and About pages.
+- Docker support and automated GitHub tests.
 
 ## Validation snapshot
 
 | Capability | Validation |
 | --- | --- |
-| Gemini API | Live generation returned the requested response |
-| Resume-aware question parsing | Exactly five questions validated |
-| Whisper voice path | Real 4.93-second WAV transcribed correctly |
-| ffmpeg discovery | Versioned imageio binary exposed as `ffmpeg` |
-| SQLite privacy | Tests enforce session-isolated history reads |
-| Streamlit | Initial page covered by an automated render smoke test |
+| Automated suite | 15 tests pass locally on Python 3.12 |
+| Resume extraction | TXT cleanup, DOCX paragraphs/tables, PNG/JPEG routing, and failure messages |
+| Grounding | Tests verify job-description context reaches summary and question prompts |
+| Question parsing | Exactly five numbered questions are required |
+| Reports | Scores, communication metrics, and filler counts are aggregated |
+| SQLite privacy | History reads are restricted to the current session identifier |
+| Speech dependency | ffmpeg is exposed under the command name Whisper expects |
+| Streamlit | Initial render, résumé uploader, and accessibility control are smoke-tested |
 
-The live API and speech checks validate functionality in the development
-environment; they are not accuracy benchmarks. Gemini availability and output
-can vary by account, model access, quota, and time.
+These checks validate application behavior, not interview-feedback accuracy.
+Gemini availability and output can vary by account, model access, quota, and
+time. See [Testing and evaluation](docs/testing.md) for the exact automated
+coverage, manual checks, and remaining evaluation work.
+
+## Documentation
+
+| Document | Purpose |
+| --- | --- |
+| [Architecture](docs/architecture.md) | System flow, module ownership, and data lifecycle |
+| [Testing and evaluation](docs/testing.md) | Reproducible test commands, coverage, and open risks |
+| [Development log](docs/development-log.md) | Milestones, engineering decisions, and lessons learned |
+| [Demo guide](docs/demo-guide.md) | A concise 90-second recording plan and evidence checklist |
 
 ## Quick start
 
@@ -121,6 +148,7 @@ Then open `http://localhost:8501`.
 
 ```text
 app.py                      Streamlit UI and interview state machine
+pages/                      Product information pages
 utils/gemini_client.py      Gemini model selection and API access
 utils/pdf_reader.py         Document and resume-image text extraction
 utils/summarizer.py         Grounded target-role briefing prompt
@@ -131,6 +159,7 @@ utils/communication.py      Deterministic speaking-quality signals
 utils/database.py           Parameterized, session-scoped SQLite storage
 utils/report.py             Aggregate report generation
 tests/                      Core logic and Streamlit smoke tests
+docs/                       Architecture, testing, development, and demo evidence
 ```
 
 The modules are intentionally small and single-purpose so the AI calls,
@@ -175,13 +204,14 @@ longer than later requests.
 ## Testing
 
 ```powershell
-python -m py_compile app.py utils\*.py
+python -m compileall -q app.py utils tests
 python -m unittest discover -s tests -v
 python -m pip check
 ```
 
 GitHub Actions repeats compilation and regression tests on Python 3.12 with
-ffmpeg installed.
+ffmpeg installed. Detailed test ownership and the current evaluation gaps are
+documented in [`docs/testing.md`](docs/testing.md).
 
 ## Limitations
 
@@ -189,7 +219,8 @@ ffmpeg installed.
 - The simple filler-word heuristic does not measure overall communication
   quality, confidence, accent, or interview readiness.
 - Speaking rate is only available for recorded answers.
-- PDF extraction works best on text-based files; scanned resumes require OCR.
+- PDF extraction works best on text-based files; scanned PDFs should be
+  exported as a clear PNG or JPG for Gemini image transcription.
 - The Whisper base model trades accuracy for local resource usage.
 - Local SQLite persistence is not suitable for a public multi-user system.
 - No claim is made that app scores predict real hiring outcomes.

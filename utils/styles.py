@@ -5,8 +5,28 @@ from __future__ import annotations
 import streamlit as st
 
 
+def _accessibility_enabled_from_url() -> bool:
+    """Return whether the current URL requests the accessible presentation."""
+    return str(st.query_params.get("accessibility", "0")).lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+
+
+def _sync_accessibility_query() -> None:
+    """Keep accessibility mode when navigating between Streamlit pages."""
+    if st.session_state.get("accessibility_mode", False):
+        st.query_params["accessibility"] = "1"
+    elif "accessibility" in st.query_params:
+        del st.query_params["accessibility"]
+
+
 def inject_global_styles() -> None:
     """Apply a quiet, accessible product theme."""
+    if "accessibility_mode" not in st.session_state:
+        st.session_state.accessibility_mode = _accessibility_enabled_from_url()
+
     st.markdown(
         """
         <style>
@@ -65,6 +85,31 @@ def inject_global_styles() -> None:
 
         p, [data-testid="stCaptionContainer"] {
             color: var(--muted);
+        }
+
+        :focus-visible {
+            outline: 3px solid #b8afff !important;
+            outline-offset: 3px !important;
+        }
+
+        .st-key-accessibility_mode {
+            position: fixed;
+            right: 1.25rem;
+            bottom: 1.25rem;
+            z-index: 999;
+            width: auto;
+            padding: .65rem .8rem .35rem;
+            border: 1px solid var(--line-strong);
+            border-radius: 13px;
+            background: rgba(20, 20, 26, .96);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, .3);
+            backdrop-filter: blur(12px);
+        }
+
+        .st-key-accessibility_mode [data-testid="stWidgetLabel"] p {
+            color: #e7e7ec;
+            font-size: .85rem;
+            font-weight: 650;
         }
 
         /* Navigation */
@@ -320,45 +365,105 @@ def inject_global_styles() -> None:
         .workflow {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: .5rem;
-            margin: 3rem 0;
-            padding: .5rem;
+            gap: 0;
+            margin: 1.75rem 0 2.5rem;
+            padding: 1rem 1.15rem;
             border: 1px solid var(--line);
-            border-radius: 16px;
-            background: rgba(16, 16, 21, .86);
+            border-radius: 14px;
+            background: rgba(16, 16, 21, .72);
         }
 
         .workflow-step {
+            position: relative;
             display: flex;
             align-items: center;
-            gap: .75rem;
-            min-height: 72px;
-            padding: .8rem 1rem;
-            border: 1px solid transparent;
-            border-radius: 11px;
+            gap: .8rem;
+            min-width: 0;
+            padding: .15rem .8rem .15rem 0;
             color: #777782;
-            font-size: 1rem;
-            font-weight: 600;
         }
 
-        .workflow-step + .workflow-step {
-            border-left-color: transparent;
+        .workflow-step:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            z-index: 0;
+            top: 1.05rem;
+            left: 2.7rem;
+            right: .6rem;
+            height: 1px;
+            background: var(--line-strong);
         }
 
-        .workflow-step strong {
-            color: #6f6f7a;
-            font-size: .8rem;
+        .workflow-marker {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            flex: 0 0 2.1rem;
+            align-items: center;
+            justify-content: center;
+            width: 2.1rem;
+            height: 2.1rem;
+            border: 1px solid var(--line-strong);
+            border-radius: 50%;
+            color: #858591;
+            background: #121218;
+            font-size: .82rem;
+            font-weight: 750;
         }
 
-        .workflow-step.active {
-            border-color: #8274f1;
+        .workflow-copy {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            min-width: 0;
+            padding-right: .55rem;
+            flex-direction: column;
+            gap: .08rem;
+            background: #101015;
+        }
+
+        .workflow-copy small {
+            color: #696975;
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+        }
+
+        .workflow-copy > span {
+            overflow: hidden;
+            color: #858591;
+            font-size: .9rem;
+            font-weight: 650;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .step-check { display: none; }
+
+        .workflow-step.active .workflow-marker {
+            border-color: #9b91ff;
             color: white;
-            background: linear-gradient(115deg, #6f61df, #7e6dec);
-            box-shadow: 0 10px 28px rgba(90, 73, 210, .22);
+            background: linear-gradient(135deg, #7668e6, #8c79f1);
+            box-shadow: 0 0 0 4px rgba(126, 109, 236, .13);
         }
-        .workflow-step.active strong { color: white; }
-        .workflow-step.done { color: #b8b8c1; }
-        .workflow-step.done strong { color: var(--success); }
+
+        .workflow-step.active .workflow-copy small { color: #a99fff; }
+        .workflow-step.active .workflow-copy > span { color: #f5f5f7; }
+
+        .workflow-step.done:not(:last-child)::after {
+            background: rgba(105, 221, 174, .5);
+        }
+
+        .workflow-step.done .workflow-marker {
+            border-color: rgba(105, 221, 174, .5);
+            color: var(--success);
+            background: rgba(105, 221, 174, .09);
+        }
+
+        .workflow-step.done .step-number { display: none; }
+        .workflow-step.done .step-check { display: inline; }
+        .workflow-step.done .workflow-copy > span { color: #b9b9c2; }
 
         /* Information pages */
         .info-hero {
@@ -1462,10 +1567,44 @@ def inject_global_styles() -> None:
             }
             .hero p { font-size: 1.02rem; }
 
-            .workflow { grid-template-columns: 1fr; }
-            .workflow-step { min-height: 56px; }
-            .workflow-step + .workflow-step {
-                border-left-color: transparent;
+            .workflow {
+                gap: .2rem;
+                margin: 1.25rem 0 2rem;
+                padding: .85rem .65rem 2.8rem;
+            }
+            .workflow-step {
+                justify-content: center;
+                gap: .45rem;
+                padding-right: 0;
+            }
+            .workflow-step:not(:last-child)::after {
+                left: calc(50% + 1.25rem);
+                right: calc(-50% + 1.25rem);
+            }
+            .workflow-marker {
+                flex-basis: 1.9rem;
+                width: 1.9rem;
+                height: 1.9rem;
+            }
+            .workflow-copy {
+                display: none;
+            }
+            .workflow-step.active .workflow-copy {
+                position: absolute;
+                top: 2.35rem;
+                left: 50%;
+                display: flex;
+                width: max-content;
+                max-width: 31vw;
+                padding: 0;
+                align-items: center;
+                background: transparent;
+                transform: translateX(-50%);
+            }
+            .workflow-step.active .workflow-copy small { display: none; }
+            .workflow-step.active .workflow-copy > span {
+                max-width: 31vw;
+                font-size: .76rem;
             }
 
             .feature-grid { grid-template-columns: 1fr; }
@@ -1563,19 +1702,104 @@ def inject_global_styles() -> None:
         unsafe_allow_html=True,
     )
 
+    if st.session_state.get("accessibility_mode", False):
+        st.markdown(
+            """
+            <style>
+            :root {
+                --line: #4d4d59;
+                --line-strong: #70707d;
+                --muted: #d4d4dc;
+                --accent: #978bff;
+                --accent-hover: #aaa1ff;
+            }
+
+            html { font-size: 17px; }
+
+            .stApp {
+                background: #0c0c10 !important;
+            }
+
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .001ms !important;
+            }
+
+            p,
+            li,
+            [data-testid="stCaptionContainer"],
+            [data-testid="stMarkdownContainer"] {
+                line-height: 1.8 !important;
+            }
+
+            [data-testid="stWidgetLabel"] p,
+            [data-testid="stFileUploaderDropzoneInstructions"] span {
+                color: #f5f5f7 !important;
+                font-size: 1rem !important;
+            }
+
+            button,
+            input,
+            textarea,
+            [role="combobox"] {
+                min-height: 48px !important;
+                font-size: 1rem !important;
+            }
+
+            [data-testid="stCaptionContainer"] {
+                color: #d4d4dc !important;
+                font-size: .95rem !important;
+            }
+
+            .nav-links a,
+            .role-pill,
+            .step-tags span {
+                font-size: .92rem !important;
+            }
+
+            .st-key-accessibility_mode {
+                border-color: #8d83df;
+                background: #1b1a23;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_accessibility_control() -> None:
+    """Render a persistent, site-wide accessibility-mode switch."""
+    st.toggle(
+        "Accessibility",
+        key="accessibility_mode",
+        on_change=_sync_accessibility_query,
+        help=(
+            "Enlarge text and controls, strengthen contrast, reduce decorative "
+            "motion, and improve keyboard focus visibility."
+        ),
+    )
+
 
 def render_product_nav(active_page: str = "Practice") -> None:
     """Render the lightweight top product bar and page navigation."""
     links = []
+    accessible_suffix = (
+        "?accessibility=1"
+        if st.session_state.get("accessibility_mode", False)
+        else ""
+    )
     for label, href in (
         ("Practice", "/"),
         ("How it works", "/How_it_works"),
         ("About", "/About"),
     ):
         active_class = " active" if label == active_page else ""
+        aria_current = ' aria-current="page"' if label == active_page else ""
         links.append(
-            f'<a class="nav-link{active_class}" href="{href}" '
-            f'target="_self">{label}</a>'
+            f'<a class="nav-link{active_class}" href="{href}{accessible_suffix}" '
+            f'target="_self"{aria_current}>{label}</a>'
         )
 
     st.markdown(
