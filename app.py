@@ -252,11 +252,12 @@ report_ready = bool(
     and len(st.session_state.evaluations)
     == len(st.session_state.interview_questions)
 )
-step_classes = [
-    "done" if plan_ready else "active",
-    "done" if questions_ready else ("active" if plan_ready else ""),
-    "done" if report_ready else ("active" if questions_ready else ""),
-]
+if not plan_ready:
+    step_classes = ["active", "", ""]
+elif not report_ready:
+    step_classes = ["done", "active", ""]
+else:
+    step_classes = ["done", "done", "active"]
 step_current = [
     ' aria-current="step"' if step_class == "active" else ""
     for step_class in step_classes
@@ -644,6 +645,6 @@ with report_tab:
             )
         else:
             st.caption(
-                "Enable local score history in the sidebar to persist this "
+                "Enable local score history in the interview setup to persist this "
                 "session's score trend."
             )

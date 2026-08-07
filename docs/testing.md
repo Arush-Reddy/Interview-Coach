@@ -8,7 +8,7 @@ human or dataset-based evaluation.
 Verified locally on **2026-08-05** using Python 3.12:
 
 ```text
-15 tests passed
+16 tests passed
 ```
 
 Run the same checks with:
@@ -40,14 +40,14 @@ the system `ffmpeg` package installed.
 | Report aggregation | Answer scores, communication scores, and filler counts are aggregated |
 | Database isolation | One session cannot read another session's saved history |
 | Speech dependency | ffmpeg is exposed under the executable name Whisper requires |
-| Streamlit smoke test | Initial render, résumé upload, and accessibility control load without exceptions |
+| Streamlit smoke tests | Initial render plus a complete mocked sample-profile interview through five answers and the final report |
 
 The Gemini calls in unit tests are mocked. This keeps the suite deterministic,
 fast, and independent of API quota or model availability.
 
 ## Manual integration checklist
 
-Run these checks before a release or hackathon demonstration:
+Run these checks before a release or public deployment:
 
 - Upload one valid file of each supported format: PDF, DOCX, TXT, PNG, and JPG.
 - Paste a job description and confirm that the briefing discusses matches,

@@ -10,10 +10,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 [**Try the live app**](https://interview-coach-arush.streamlit.app/) ·
+[**Watch the demo**](https://www.youtube.com/watch?v=dmzWsRf0Tiw) ·
 [Architecture](docs/architecture.md) ·
 [Testing](docs/testing.md) ·
-[Development log](docs/development-log.md) ·
-[Demo guide](docs/demo-guide.md)
+[Development log](docs/development-log.md)
 
 AI Interview Coach turns a resume into a focused practice loop. It extracts a
 PDF, DOCX, TXT, PNG, or JPG résumé, asks Gemini to build a target-role briefing,
@@ -27,6 +27,16 @@ speaking pace, session progress, and report statistics.
 
 > **Status:** working portfolio prototype. It is designed for practice and
 > self-reflection, not recruitment screening or automated hiring decisions.
+
+## Product tour
+
+| Create a role-specific plan | Review structured answer feedback |
+| --- | --- |
+| ![Interview setup](docs/assets/gallery/01-practice-plan.png) | ![Answer feedback](docs/assets/gallery/04-answer-feedback.png) |
+
+| See the complete interview report | Understand the workflow |
+| --- | --- |
+| ![Interview report](docs/assets/gallery/05-interview-report.png) | ![How AI Interview Coach works](docs/assets/gallery/06-how-it-works.png) |
 
 ## Why this project is interesting
 
@@ -94,14 +104,14 @@ responsibilities, data boundaries, and the full request lifecycle.
 
 | Capability | Validation |
 | --- | --- |
-| Automated suite | 15 tests pass locally on Python 3.12 |
+| Automated suite | 16 tests pass locally on Python 3.12 |
 | Resume extraction | TXT cleanup, DOCX paragraphs/tables, PNG/JPEG routing, and failure messages |
 | Grounding | Tests verify job-description context reaches summary and question prompts |
 | Question parsing | Exactly five numbered questions are required |
 | Reports | Scores, communication metrics, and filler counts are aggregated |
 | SQLite privacy | History reads are restricted to the current session identifier |
 | Speech dependency | ffmpeg is exposed under the command name Whisper expects |
-| Streamlit | Initial render, résumé uploader, and accessibility control are smoke-tested |
+| Streamlit | Initial render and a complete mocked sample-profile interview are smoke-tested |
 
 These checks validate application behavior, not interview-feedback accuracy.
 Gemini availability and output can vary by account, model access, quota, and
@@ -115,7 +125,6 @@ coverage, manual checks, and remaining evaluation work.
 | [Architecture](docs/architecture.md) | System flow, module ownership, and data lifecycle |
 | [Testing and evaluation](docs/testing.md) | Reproducible test commands, coverage, and open risks |
 | [Development log](docs/development-log.md) | Milestones, engineering decisions, and lessons learned |
-| [Demo guide](docs/demo-guide.md) | A concise 90-second recording plan and evidence checklist |
 
 ## Quick start
 
@@ -159,7 +168,7 @@ utils/communication.py      Deterministic speaking-quality signals
 utils/database.py           Parameterized, session-scoped SQLite storage
 utils/report.py             Aggregate report generation
 tests/                      Core logic and Streamlit smoke tests
-docs/                       Architecture, testing, development, and demo evidence
+docs/                       Architecture, testing, development, and product media
 ```
 
 The modules are intentionally small and single-purpose so the AI calls,
