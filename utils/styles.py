@@ -93,17 +93,15 @@ def inject_global_styles() -> None:
         }
 
         .st-key-accessibility_mode {
-            position: fixed;
-            right: 1.25rem;
-            bottom: 1.25rem;
-            z-index: 999;
-            width: auto;
+            position: relative;
+            z-index: 2;
+            width: fit-content;
+            margin: -1.65rem 0 2.4rem auto;
             padding: .65rem .8rem .35rem;
             border: 1px solid var(--line-strong);
             border-radius: 13px;
             background: rgba(20, 20, 26, .96);
-            box-shadow: 0 14px 36px rgba(0, 0, 0, .3);
-            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, .22);
         }
 
         .st-key-accessibility_mode [data-testid="stWidgetLabel"] p {
@@ -1548,6 +1546,10 @@ def inject_global_styles() -> None:
             }
 
             .product-nav { margin-bottom: 3rem; }
+            .st-key-accessibility_mode {
+                width: 100%;
+                margin: -1.6rem 0 2.2rem;
+            }
             .nav-status { display: none; }
             .product-nav {
                 align-items: flex-start;
