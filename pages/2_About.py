@@ -2,7 +2,11 @@
 
 import streamlit as st
 
-from utils.styles import inject_global_styles, render_product_nav
+from utils.styles import (
+    inject_global_styles,
+    render_accessibility_control,
+    render_product_nav,
+)
 
 
 st.set_page_config(
@@ -13,6 +17,7 @@ st.set_page_config(
 )
 inject_global_styles()
 render_product_nav("About")
+render_accessibility_control()
 
 st.markdown(
     """

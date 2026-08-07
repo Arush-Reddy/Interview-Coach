@@ -14,6 +14,7 @@ from utils.report import build_report, report_as_markdown
 from utils.speech import transcribe_audio
 from utils.styles import (
     inject_global_styles,
+    render_accessibility_control,
     render_landing_hero,
     render_product_nav,
     render_workspace_header,
@@ -105,6 +106,7 @@ defaults = {
     "answer_sources": {},
     "session_id": str(uuid.uuid4()),
     "save_history": False,
+    "accessibility_mode": False,
 }
 for state_key, default_value in defaults.items():
     if state_key not in st.session_state:
@@ -113,6 +115,7 @@ for state_key, default_value in defaults.items():
 
 plan_ready = bool(st.session_state.resume_summary)
 render_product_nav()
+render_accessibility_control()
 
 if not plan_ready:
     render_landing_hero()
@@ -243,6 +246,43 @@ def render_setup_fields(compact=False):
     return uploaded_resume, uploaded_job, build_clicked
 
 
+questions_ready = bool(st.session_state.interview_questions)
+report_ready = bool(
+    questions_ready
+    and len(st.session_state.evaluations)
+    == len(st.session_state.interview_questions)
+)
+if not plan_ready:
+    step_classes = ["active", "", ""]
+elif not report_ready:
+    step_classes = ["done", "active", ""]
+else:
+    step_classes = ["done", "done", "active"]
+step_current = [
+    ' aria-current="step"' if step_class == "active" else ""
+    for step_class in step_classes
+]
+
+st.markdown(
+    f"""
+    <div class="workflow" aria-label="Interview practice progress">
+      <div class="workflow-step {step_classes[0]}"{step_current[0]}>
+        <span class="workflow-marker"><span class="step-number">1</span><span class="step-check">✓</span></span>
+        <span class="workflow-copy"><small>Step 1 of 3</small><span>Build your plan</span></span>
+      </div>
+      <div class="workflow-step {step_classes[1]}"{step_current[1]}>
+        <span class="workflow-marker"><span class="step-number">2</span><span class="step-check">✓</span></span>
+        <span class="workflow-copy"><small>Step 2 of 3</small><span>Practise answers</span></span>
+      </div>
+      <div class="workflow-step {step_classes[2]}"{step_current[2]}>
+        <span class="workflow-marker"><span class="step-number">3</span><span class="step-check">✓</span></span>
+        <span class="workflow-copy"><small>Step 3 of 3</small><span>Review progress</span></span>
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 if plan_ready:
     setup_column, restart_column, progress_column = st.columns(
         [1, 1, 1.8],
@@ -281,29 +321,6 @@ else:
     uploaded_file, job_description_file, analyze_clicked = render_setup_fields(
         compact=False
     )
-
-questions_ready = bool(st.session_state.interview_questions)
-report_ready = bool(
-    questions_ready
-    and len(st.session_state.evaluations)
-    == len(st.session_state.interview_questions)
-)
-step_classes = [
-    "done" if plan_ready else "active",
-    "done" if questions_ready else ("active" if plan_ready else ""),
-    "done" if report_ready else ("active" if questions_ready else ""),
-]
-
-st.markdown(
-    f"""
-    <div class="workflow">
-      <div class="workflow-step {step_classes[0]}"><strong>01</strong> Build your plan</div>
-      <div class="workflow-step {step_classes[1]}"><strong>02</strong> Practise answers</div>
-      <div class="workflow-step {step_classes[2]}"><strong>03</strong> Review progress</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
 if analyze_clicked:
     with st.spinner("Gemini is analysing your resume..."):
@@ -628,6 +645,6 @@ with report_tab:
             )
         else:
             st.caption(
-                "Enable local score history in the sidebar to persist this "
+                "Enable local score history in the interview setup to persist this "
                 "session's score trend."
             )
